@@ -1,0 +1,554 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+
+
+}
+datasource db {
+  provider = "postgresql"
+}
+// ─────────────────────────────────────────────
+// MASTER / LOOKUP TABLES
+// ─────────────────────────────────────────────
+
+model Country {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  code      String?  @unique @db.VarChar(10)
+  phoneCode String?  @db.VarChar(10)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  states State[]
+
+  @@map("countries")
+}
+
+model State {
+  id        String   @id @default(uuid())
+  name      String
+  countryId String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  country Country @relation(fields: [countryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  cities  City[]
+
+  @@map("states")
+}
+
+model City {
+  id        String   @id @default(uuid())
+  name      String
+  stateId   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  state State  @relation(fields: [stateId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  leads Lead[]
+
+  @@map("cities")
+}
+
+model Gender {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("genders")
+}
+
+model Source {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  leads         Lead[]
+  leadRelations LeadRelation[]
+
+  @@map("sources")
+}
+
+model ServiceType {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  code        String?  @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  consultations Consultation[]
+
+  @@map("service_types")
+}
+
+model Status {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  color       String?
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  leadRelations LeadRelation[]
+
+  @@map("statuses")
+}
+model RefundStatus {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  description String?
+  color       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  transactions Transaction[]
+
+  @@map("refund_statuses")
+}
+
+model ConsultationStatusMaster {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("consultation_statuses")
+}
+
+model PatientStatusMaster {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("patient_statuses")
+}
+
+model TransactionMethod {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  transactions Transaction[]
+
+  @@map("transaction_methods")
+}
+
+model TransactionStatusMaster {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions Transaction[]
+
+  @@map("transaction_statuses")
+}
+
+// ─────────────────────────────────────────────
+// USERS / AGENTS / PSYCHOLOGISTS
+// ─────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  role      String   @default("User")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assignedFollowUps            FollowUp[]             @relation("FollowUpAssignedTo")
+  updatedFollowUps             FollowUp[]             @relation("FollowUpUpdatedBy")
+  consultationSchedules        ConsultationSchedule[] @relation("SchedulePsychologist")
+  consultationSchedulesCreated ConsultationSchedule[] @relation("ScheduleCreatedBy")
+  consultationSchedulesUpdated ConsultationSchedule[] @relation("ScheduleUpdatedBy")
+  feedbackRooms                ConsultationRoom[]     @relation("RoomFeedbackBy")
+
+  @@map("Users")
+}
+
+model Agent {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  role      String   @default("Agent")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  calls                 Call[]
+  leadRelations         LeadRelation[]
+  consultationHistories ConsultationHistory[] @relation("HistoryBDM")
+  weeklyPerformances    WeeklyPerformance[]
+
+  @@map("agents")
+}
+
+model Psychologist {
+  id             String   @id @default(uuid())
+  name           String
+  specialization String
+  avgRating      Float    @default(0)
+  workload       Int      @default(0)
+  email          String?
+  phone          String?
+  experience     Int      @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  consultations         Consultation[]
+  consultationHistories ConsultationHistory[]
+  consultationRooms     ConsultationRoom[]
+
+  @@map("psychologists")
+}
+
+// ─────────────────────────────────────────────
+// LEADS & PATIENTS
+// ─────────────────────────────────────────────
+
+model Lead {
+  id                      String    @id @default(uuid())
+  callerName              String
+  patientName             String
+  relationshipWithPatient String    @default("Self")
+  phone                   String
+  email                   String?
+  cityId                  String?
+  sourceId                String?
+  serviceInterested       String?
+  status                  String    @default("New")
+  temperature             String    @default("Warm")
+  leadScore               Int       @default(0)
+  assignedAgent           String?
+  psychologistAssigned    String?
+  consultationStatus      String    @default("Scheduled")
+  paymentStatus           String    @default("Pending")
+  followUpAssignedTo      String?
+  followUpDate            DateTime?
+  followUpStatus          String    @default("Pending")
+  lastActivity            DateTime  @default(now())
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  city   City?   @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  source Source? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+
+  calls                 Call[]
+  leadRelations         LeadRelation[]
+  consultations         Consultation[]
+  consultationHistories ConsultationHistory[]
+  consultationRooms     ConsultationRoom[]
+  consultationSchedules ConsultationSchedule[]
+  followUps             FollowUp[]
+
+  @@map("leads")
+}
+
+model Patient {
+  id                           String    @id @default(uuid())
+  patientName                  String
+  callerName                   String
+  relationship                 String    @default("Self")
+  phone                        String
+  alternatePhone               String?
+  email                        String?
+  dateOfBirth                  DateTime?
+  gender                       String?
+  address                      String?
+  city                         String?
+  emergencyContactName         String?
+  emergencyContactPhone        String?
+  emergencyContactRelationship String?
+  diagnosis                    String?
+  referralSource               String?
+  consultationStatus           String    @default("Scheduled")
+  paymentStatus                String    @default("Pending")
+  psychologistAssigned         String?
+  assignedBDM                  String?
+  lastConsultation             DateTime?
+  createdAt                    DateTime  @default(now())
+  updatedAt                    DateTime  @updatedAt
+
+  @@map("patients")
+}
+
+// ─────────────────────────────────────────────
+// LEAD RELATIONS
+// ─────────────────────────────────────────────
+
+model LeadRelation {
+  id         String    @id @default(uuid())
+  leadId     String
+  sourceId   String
+  statusId   String
+  agentId    String
+  notes      String?
+  assignedAt DateTime  @default(now())
+  closedAt   DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  status Status @relation(fields: [statusId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  agent  Agent  @relation(fields: [agentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("lead_relations")
+}
+
+// ─────────────────────────────────────────────
+// CALLS
+// ─────────────────────────────────────────────
+
+model Call {
+  id        String   @id @default(uuid())
+  leadId    String
+  patientId String?
+  agentId   String
+  duration  Int      @default(0)
+  timestamp DateTime @default(now())
+  aiInsights Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lead  Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@map("calls")
+}
+
+// ─────────────────────────────────────────────
+// CONSULTATIONS
+// ─────────────────────────────────────────────
+
+model Consultation {
+  id                 String   @id @default(uuid())
+  leadId             String
+  psychId            String
+  serviceTypeId      String
+  datetime           DateTime
+  status             String   @default("Scheduled")
+  cancellationReason String?
+  rescheduledFrom    String?
+  refundInitiated    Boolean  @default(false)
+  refundLink         String?
+  bookedBy           String?
+  updatedBy          String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  lead         Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  psychologist Psychologist @relation(fields: [psychId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  serviceType  ServiceType  @relation(fields: [serviceTypeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  consultationRooms ConsultationRoom[]
+
+  @@map("consultations")
+}
+
+model ConsultationHistory {
+  id                       String    @id @default(uuid())
+  leadId                   String
+  psychologistId           String
+  bdmId                    String?
+  patientName              String
+  callerName               String?
+  serviceInterested        String
+  consultationDate         DateTime
+  status                   String    @default("Scheduled")
+  sessionDurationInSeconds Int       @default(0)
+  followUpCount            Int       @default(0)
+  recommendations          String?   @default("")
+  patientAssessment        String?   @default("")
+  averageRating            Float     @default(0)
+  sessionNotes             Json?     @default("[]")
+  feedbackHistory          Json?     @default("[]")
+  consultationStartedAt    DateTime?
+  consultationEndedAt      DateTime?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+
+  lead         Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  psychologist Psychologist @relation(fields: [psychologistId], references: [id], onDelete: Cascade)
+  bdm          Agent?       @relation("HistoryBDM", fields: [bdmId], references: [id], onDelete: SetNull)
+
+  @@map("consultation_histories")
+}
+
+model ConsultationRoom {
+  id                       String    @id @default(uuid())
+  leadId                   String
+  psychologistId           String
+  consultationId           String
+  sessionNotes             String?   @default("")
+  patientAssessment        String?   @default("")
+  followUpCount            Int       @default(0)
+  recommendations          String?   @default("")
+  sessionDurationInSeconds Int       @default(0)
+  sessionStartTime         DateTime  @default(now())
+  sessionEndTime           DateTime?
+  consultationStatus       String    @default("Scheduled")
+  feedbackSubmittedBy      String?
+  isFeedbackSubmitted      Boolean   @default(false)
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+
+  lead         Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  psychologist Psychologist @relation(fields: [psychologistId], references: [id], onDelete: Cascade)
+  consultation Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  feedbackUser User?        @relation("RoomFeedbackBy", fields: [feedbackSubmittedBy], references: [id], onDelete: SetNull)
+
+  @@map("consultation_rooms")
+}
+
+model ConsultationSchedule {
+  id             String   @id @default(uuid())
+  leadId         String
+  psychologistId String
+  datetime       DateTime
+  status         String   @default("Scheduled")
+  createdBy      String?
+  updatedBy      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  lead          Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  psychologist  User  @relation("SchedulePsychologist", fields: [psychologistId], references: [id], onDelete: Cascade)
+  createdByUser User? @relation("ScheduleCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User? @relation("ScheduleUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@map("consultation_schedules")
+}
+
+// ─────────────────────────────────────────────
+// FOLLOW UPS
+// ─────────────────────────────────────────────
+
+model FollowUp {
+  id                 String    @id @default(uuid())
+  leadId             String
+  patientName        String
+  callerName         String
+  phone              String
+  serviceInterested  String
+  city               String?   @default("")
+  status             String    @default("Open")
+  temperature        String    @default("Warm")
+  followUpAssignedTo String
+  followUpDate       DateTime
+  followUpStatus     String    @default("Pending")
+  followUpRemarks    String?   @default("")
+  rescheduledDate    DateTime?
+  updatedBy          String?
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  lead          Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  assignedToUser User  @relation("FollowUpAssignedTo", fields: [followUpAssignedTo], references: [id], onDelete: Cascade)
+  updatedByUser  User? @relation("FollowUpUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@map("follow_ups")
+}
+
+// ─────────────────────────────────────────────
+// TRANSACTIONS
+// ─────────────────────────────────────────────
+
+model Transaction {
+  id               String   @id @default(uuid())
+  referenceId      String
+  type             String
+  statusId         String
+  methodId         String
+  amount           Float
+  currency         String   @default("INR")
+
+  refundStatusId   String?
+
+  createdBy        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  status           TransactionStatusMaster @relation(fields: [statusId], references: [id])
+
+  method           TransactionMethod @relation(fields: [methodId], references: [id])
+
+  refundStatus     RefundStatus? @relation(fields: [refundStatusId], references: [id])
+
+  history          TransactionHistory[]
+
+  @@map("transactions")
+}
+
+model TransactionHistory {
+  id            String   @id @default(uuid())
+  transactionId String
+  fromStatusId  String?
+  toStatusId    String
+  reason        String?
+  changedBy     String?
+  createdAt     DateTime @default(now())
+
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+
+  @@map("transaction_histories")
+}
+
+// ─────────────────────────────────────────────
+// WEEKLY PERFORMANCE
+// ─────────────────────────────────────────────
+
+model WeeklyPerformance {
+  id                   String   @id @default(uuid())
+  agentId              String
+  agentName            String
+  year                 Int
+  month                Int
+  week                 Int
+  callsHandled         Int      @default(0)
+  leadsConverted       Int      @default(0)
+  consultationBookings Int      @default(0)
+  revenueContribution  Float    @default(0)
+  avgSentimentScore    Float    @default(0)
+  performanceGrade     String   @default("Average")
+  serviceBreakdown     Json     @default("[]")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  agent Agent @relation(fields: [agentId], references: [id])
+
+  @@map("weekly_performance")
+}

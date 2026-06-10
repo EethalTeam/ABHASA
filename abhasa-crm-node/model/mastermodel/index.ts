@@ -1,0 +1,27 @@
+export { default as Agent } from "./agent.model";
+export { default as Call } from "./call.model";
+export { default as City } from "./city.model";
+export { default as ConsultationHistory } from "./consultationHistory.model";
+export { default as consultationRoom } from "./consultationRoom.model";
+export { default as consultationSchedule } from "./consultationSchedule.model";
+export { default as consultationstatus } from "./consultationstatus.model";
+export { default as country } from "./country.model";
+export { default as followUp } from "./followUp.model";
+export { default as gender } from "./gender.model";
+export { default as lead } from "./lead.model";
+export { default as leadrelation } from "./leadrelation.model";
+export { default as leadstatus } from "./leadstatus.model";
+export { default as patient } from "./patient.model";
+export { default as patientstatus } from "./patientstatus.model";
+export { default as physchologist } from "./psychologist.model";
+export { default as service } from "./service.model";
+export { default as source } from "./source.model";
+export { default as state } from "./state.model";
+export { default as tempconsultation } from "./consultation.model";
+export { default as transaction } from "./transaction.model";
+export { default as transactionhistory } from "./transactionhistory.model";
+export { default as transactionmethod } from "./transactionmethod.model";
+export { default as transactionstatus } from "./transactionstatus.model";
+export { default as weeklyPerformance } from "./weeklyPerformance.model";
+export { default as User } from "./user.model";
+// ... all 25 models

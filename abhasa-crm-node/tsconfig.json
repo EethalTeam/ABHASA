@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "Node16",
+    "moduleResolution": "node16",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "ignoreDeprecations": "6.0",
+    "types": ["node"],
+    "rootDir": ".",
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      ".prisma/client": ["./node_modules/.prisma/client/index.d.ts"]
+    }
+  },
+  "include": [
+    "index.ts",
+    "prisma.config.ts",
+    "src/**/*.ts",
+    "controllers/**/*.ts",
+    "model/**/*.ts",
+    "router/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
